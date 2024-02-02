@@ -6,6 +6,7 @@ use ApiPlatform\Metadata\ApiResource;
 use App\Repository\PizzaRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PizzaRepository::class)]
 #[ApiResource]
@@ -17,21 +18,36 @@ class Pizza
     private ?int $id = null;
 
     #[ORM\Column(length: 48)]
+    #[Assert\NotNull]
+    #[Assert\Type('string')]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::ARRAY)]
+    #[Assert\NotNull]
+    #[Assert\Type('array')]
+    #[Assert\Count(
+        min: 1,
+        max: 20,
+        minMessage: 'You must specify at least one ingredient',
+        maxMessage: 'You cannot specify more than 20 ingredients',
+    )]
     private array $ingredients = [];
 
     #[ORM\Column(nullable: true)]
+    #[Assert\Type('integer')]
     private ?int $ovenTimeInSeconds = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[Assert\NotNull]
+    #[Assert\Type('date')]
     private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[Assert\Type('date')]
     private ?\DateTimeInterface $updatedAt = null;
 
     #[ORM\Column]
+    #[Assert\Type('boolean')]
     private ?bool $special = null;
 
     public function getId(): ?int
