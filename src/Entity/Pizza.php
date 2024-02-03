@@ -7,9 +7,15 @@ use App\Repository\PizzaRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: PizzaRepository::class)]
 #[ApiResource]
+#[ApiResource(
+    normalizationContext: ['groups' => ['pizza:read']],
+    denormalizationContext: ['groups' => ['pizza:write']]
+)]
+#[ORM\HasLifecycleCallbacks]
 class Pizza
 {
     #[ORM\Id]
@@ -20,6 +26,7 @@ class Pizza
     #[ORM\Column(length: 48)]
     #[Assert\NotNull]
     #[Assert\Type('string')]
+    #[Groups(['pizza:read', 'pizza:write'])]
     private ?string $name = null;
 
     #[ORM\Column(type: Types::ARRAY)]
@@ -31,23 +38,27 @@ class Pizza
         minMessage: 'You must specify at least one ingredient',
         maxMessage: 'You cannot specify more than 20 ingredients',
     )]
+    #[Groups(['pizza:read', 'pizza:write'])]
     private array $ingredients = [];
 
     #[ORM\Column(nullable: true)]
     #[Assert\Type('integer')]
+    #[Groups(['pizza:read', 'pizza:write'])]
     private ?int $ovenTimeInSeconds = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE)]
-    #[Assert\NotNull]
     #[Assert\Type('date')]
+    #[Groups(['pizza:read'])]
     private ?\DateTimeInterface $createdAt = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     #[Assert\Type('date')]
+    #[Groups(['pizza:read'])]
     private ?\DateTimeInterface $updatedAt = null;
 
     #[ORM\Column]
     #[Assert\Type('boolean')]
+    #[Groups(['pizza:read', 'pizza:write'])]
     private ?bool $special = null;
 
     public function getId(): ?int
@@ -122,7 +133,9 @@ class Pizza
 
     public function setSpecial(bool $special): static
     {
-        $this->special = $special;
+        if ($this->special === null) {
+            $this->special = $special;
+        }
 
         return $this;
     }
